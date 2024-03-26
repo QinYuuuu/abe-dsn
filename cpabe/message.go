@@ -1,5 +1,8 @@
 package cpabe
 
+import "github.com/Nik-U/pbc"
+
 type Message struct {
-	content []byte
+	mElement *pbc.Element
+	mByte    []byte
 }

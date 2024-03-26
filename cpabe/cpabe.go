@@ -29,7 +29,11 @@ func Setup(atts []string) (*pbc.Pairing, ABEpk, ABEmsk) {
 	return pairing, pk, msk
 }
 
-func Enc() {}
+func Enc(pairing *pbc.Pairing, m *Message, ac *AccessStructure, pk ABEpk) Ciphertext {
+	s := pairing.NewZr().Rand()
+	C1 := pairing.NewGT().Mul(m.mElement, pairing.NewGT().PowZn(pk.eggalpha, s))
+	C2 := pairing.NewG1().PowZn(pk.g, s)
+}
 
 func KeyGen(pairing *pbc.Pairing, msk ABEmsk, pk ABEpk, atts []string) (PersonalKey, error) {
 	t := pairing.NewZr().Rand()
