@@ -9,7 +9,6 @@ import (
 
 type AccessStructure struct {
 	rho        map[int]string // row -> att
-	tau        map[string]int // att -> committeeID
 	A          [][]int
 	partsIndex int
 	policyTree *TreeNode

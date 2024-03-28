@@ -31,8 +31,37 @@ func Setup(atts []string) (*pbc.Pairing, ABEpk, ABEmsk) {
 
 func Enc(pairing *pbc.Pairing, m *Message, ac *AccessStructure, pk ABEpk) Ciphertext {
 	s := pairing.NewZr().Rand()
-	C1 := pairing.NewGT().Mul(m.mElement, pairing.NewGT().PowZn(pk.eggalpha, s))
-	C2 := pairing.NewG1().PowZn(pk.g, s)
+	c1 := pairing.NewGT().Mul(m.mElement, pairing.NewGT().PowZn(pk.eggalpha, s))
+	c2 := pairing.NewG1().PowZn(pk.g, s)
+
+	lenth := ac.GetL()
+	n := ac.GetN()
+
+	v := []*pbc.Element{s}
+	r := []*pbc.Element{pairing.NewZr().Rand()}
+	for i := 1; i < lenth; i++ {
+		v = append(v, pairing.NewZr().Rand())
+		r = append(r, pairing.NewZr().Rand())
+	}
+	d1 := make(map[string]*pbc.Element)
+	d2 := make(map[string]*pbc.Element)
+	for i := 0; i < n; i++ {
+		lambdax := DotProduct(ac.A[i], v, pairing)
+		att := ac.rho[i]
+		tmp := pairing.NewG1().PowZn(pk.ga, lambdax)
+		d1[att] = pairing.NewG1().Mul(tmp, pairing.NewG1().PowZn(pk.h[att], pairing.NewZr().Neg(r[i])))
+		d2[att] = pairing.NewG1().PowZn(pk.g, r[i])
+	}
+
+	c := Ciphertext{
+		C1:              c1,
+		C2:              c2,
+		D1:              d1,
+		D2:              d2,
+		AccessStructure: ac,
+		Pairing:         pairing,
+	}
+	return c
 }
 
 func KeyGen(pairing *pbc.Pairing, msk ABEmsk, pk ABEpk, atts []string) (PersonalKey, error) {
