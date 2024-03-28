@@ -181,13 +181,10 @@ func (aRho *AccessStructure) generateMatrix() {
 				switch node.GetLabel()[i] {
 				case '0':
 					Ax = append(Ax, 0)
-					break
 				case '1':
 					Ax = append(Ax, 1)
-					break
 				case '*':
 					Ax = append(Ax, -1)
-					break
 				}
 			}
 
@@ -256,13 +253,10 @@ func (aRho *AccessStructure) GetMatrixAsString() string {
 			switch aAx {
 			case 1:
 				sb.WriteString("  1")
-				break
 			case -1:
 				sb.WriteString(" -1")
-				break
 			case 0:
 				sb.WriteString("  0")
-				break
 			}
 		}
 		sb.WriteString("]\n")

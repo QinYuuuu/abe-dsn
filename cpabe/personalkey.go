@@ -3,7 +3,7 @@ package cpabe
 import "github.com/Nik-U/pbc"
 
 type PersonalKey struct {
-	k  *pbc.Element
-	l  *pbc.Element
-	kx map[string]*pbc.Element
+	K  *pbc.Element
+	L  *pbc.Element
+	Kx map[string]*pbc.Element
 }
