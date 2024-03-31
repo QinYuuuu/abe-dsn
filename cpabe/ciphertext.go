@@ -7,11 +7,11 @@ type Ciphertext struct {
 	C2              *pbc.Element
 	D1              map[string]*pbc.Element
 	D2              map[string]*pbc.Element
-	AccessStructure *AccessStructure
+	AccessStructure AccessStructure
 	Pairing         *pbc.Pairing
 }
 
-func NewCiphertext(pairing *pbc.Pairing, ac *AccessStructure) *Ciphertext {
+func NewCiphertext(pairing *pbc.Pairing, ac AccessStructure) *Ciphertext {
 	c := new(Ciphertext)
 	c.Pairing = pairing
 	c.AccessStructure = ac

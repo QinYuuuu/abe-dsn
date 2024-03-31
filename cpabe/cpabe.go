@@ -2,12 +2,17 @@ package cpabe
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Nik-U/pbc"
 )
 
 func Setup(atts []string) (*pbc.Pairing, *ABEpk, *ABEmsk) {
-	params := pbc.GenerateA(160, 512)
+	paramReader, err := os.Open("a.properties")
+	if err != nil {
+		fmt.Printf("read a.properties wrong: %v\n", err)
+	}
+	params, _ := pbc.NewParams(paramReader)
 	pairing := params.NewPairing()
 	g := pairing.NewG1().Rand()
 	alpha := pairing.NewZr().Rand()
@@ -29,7 +34,7 @@ func Setup(atts []string) (*pbc.Pairing, *ABEpk, *ABEmsk) {
 	return pairing, pk, msk
 }
 
-func Enc(pairing *pbc.Pairing, m *Message, ac *AccessStructure, pk *ABEpk) (*Ciphertext, error) {
+func Enc(pairing *pbc.Pairing, m *Message, ac AccessStructure, pk *ABEpk) (*Ciphertext, error) {
 	s := pairing.NewZr().Rand()
 	c1 := pairing.NewGT().Mul(m.mElement, pairing.NewGT().PowZn(pk.eggalpha, s))
 	c2 := pairing.NewG1().PowZn(pk.g, s)

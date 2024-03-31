@@ -14,15 +14,19 @@ type AccessStructure struct {
 	policyTree *TreeNode
 }
 
-func (ac *AccessStructure) GetL() int {
+func (ac AccessStructure) GetL() int {
 	return len(ac.A[0])
 }
 
-func (ac *AccessStructure) GetN() int {
+func (ac AccessStructure) GetRho() map[int]string {
+	return ac.rho
+}
+
+func (ac AccessStructure) GetN() int {
 	return len(ac.A)
 }
 
-func (ac *AccessStructure) GetRow(row int) []int {
+func (ac AccessStructure) GetRow(row int) []int {
 	return ac.A[row]
 }
 

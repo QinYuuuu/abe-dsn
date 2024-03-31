@@ -41,7 +41,7 @@ func TestEncDec(t *testing.T) {
 		fmt.Printf("KeyGen Wrong: %v", err)
 	}
 
-	ct, err := cpabe.Enc(pairing, m, as1, pk)
+	ct, err := cpabe.Enc(pairing, m, *as1, pk)
 	if err != nil {
 		fmt.Printf("Encrypt Wrong: %v", err)
 	}
