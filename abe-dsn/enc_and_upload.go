@@ -1,10 +1,12 @@
 package abedsn
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/Nik-U/pbc"
 	"github.com/QinYuuuu/abe-dsn/cpabe"
+	"github.com/QinYuuuu/avid-d/erasurecode"
 )
 
 func GenerateABEciphertext(key *pbc.Element, pairing *pbc.Pairing, pk cpabe.ABEpk, ac cpabe.AccessStructure, s *big.Int) (*pbc.Element, map[string]*pbc.Element) {
@@ -25,4 +27,14 @@ func GenerateABEciphertext(key *pbc.Element, pairing *pbc.Pairing, pk cpabe.ABEp
 		d2[att] = pairing.NewG1().PowZn(g, r[i])
 	}
 	return c1, d2
+}
+
+func GenerateChunk(symcipher []byte, N, F int) []erasurecode.ErasureCodeChunk {
+	escode := erasurecode.NewReedSolomonCode(N-2*F, N)
+	chunks, err := escode.Encode(symcipher)
+	if err != nil {
+		fmt.Printf("erasurecode encode wrong: %v\n", err)
+		return nil
+	}
+	return chunks
 }

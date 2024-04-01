@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/Nik-U/pbc"
+	"github.com/QinYuuuu/avid-d/erasurecode"
 )
 
 func main() {
@@ -18,6 +19,10 @@ func main() {
 	hasher := sha256.New()
 	hasher.Write([]byte("test"))
 	symkey := hasher.Sum(nil)
+	N := 4
+	F := 1
+	escode := erasurecode.NewReedSolomonCode(N-2*F, N)
+	escode.Encode(symkey)
 }
 
-func Test_enc_and_upload(attnum int)
+//func Test_enc_and_upload(attnum int)
