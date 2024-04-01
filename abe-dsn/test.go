@@ -52,5 +52,8 @@ func Test(attnum, nodenum, t int) {
 	pbytes, _ := json.Marshal(p)
 	chunks, merklecomm, root := GenerateChunk(pbytes, nodenum, t)
 	end := time.Now()
-	fmt.Printf("time: %v", end.Sub(start))
+	fmt.Printf("time: %v\n", end.Sub(start))
+	byteAmount := 0
+
+	fmt.Printf("communication: %vByte", byteAmount)
 }
