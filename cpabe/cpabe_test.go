@@ -30,7 +30,7 @@ func TestKeyGen(t *testing.T) {
 
 func TestEncDec(t *testing.T) {
 	pairing, pk, msk := cpabe.Setup([]string{"A", "B"})
-	m := new(cpabe.Message)
+	var m cpabe.Message
 	m.SetElement(pairing.NewGT().Rand())
 
 	as1 := new(cpabe.AccessStructure)

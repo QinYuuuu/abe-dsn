@@ -6,7 +6,10 @@ import (
 
 	"github.com/Nik-U/pbc"
 	"github.com/QinYuuuu/abe-dsn/cpabe"
-	"github.com/QinYuuuu/avid-d/erasurecode"
+	es "github.com/QinYuuuu/avid-d/erasurecode"
+	"github.com/QinYuuuu/avid-d/hasher"
+
+	merkle "github.com/QinYuuuu/avid-d/commit/merklecommitment"
 )
 
 func GenerateABEciphertext(key *pbc.Element, pairing *pbc.Pairing, pk cpabe.ABEpk, ac cpabe.AccessStructure, s *big.Int) (*pbc.Element, map[string]*pbc.Element) {
@@ -29,12 +32,26 @@ func GenerateABEciphertext(key *pbc.Element, pairing *pbc.Pairing, pk cpabe.ABEp
 	return c1, d2
 }
 
-func GenerateChunk(symcipher []byte, N, F int) []erasurecode.ErasureCodeChunk {
-	escode := erasurecode.NewReedSolomonCode(N-2*F, N)
+func GenerateChunk(symcipher []byte, N, F int) ([]es.ErasureCodeChunk, []merkle.Witness, []byte) {
+	escode := es.NewReedSolomonCode(N-2*F, N)
 	chunks, err := escode.Encode(symcipher)
 	if err != nil {
 		fmt.Printf("erasurecode encode wrong: %v\n", err)
-		return nil
+		return nil, nil, nil
 	}
-	return chunks
+	dataList := make([][]byte, N)
+	for i := 0; i < N; i++ {
+		dataList[i] = chunks[i].GetData()
+	}
+	m, _ := merkle.NewMerkleTree(dataList, hasher.SHA256Hasher)
+	witness := make([]merkle.Witness, N)
+	for i := 0; i < N; i++ {
+		witness[i], err = merkle.CreateWitness(m, i)
+		if err != nil {
+			fmt.Printf("create witness wrong: %v\n", err)
+			return nil, nil, nil
+		}
+	}
+	merklecomm := merkle.Commit(m)
+	return chunks, witness, merklecomm
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/Nik-U/pbc"
 )
 
-func Setup(atts []string) (*pbc.Pairing, *ABEpk, *ABEmsk) {
+func Setup(atts []string) (*pbc.Pairing, ABEpk, ABEmsk) {
 	paramReader, err := os.Open("a.properties")
 	if err != nil {
 		fmt.Printf("read a.properties wrong: %v\n", err)
@@ -18,14 +18,14 @@ func Setup(atts []string) (*pbc.Pairing, *ABEpk, *ABEmsk) {
 	alpha := pairing.NewZr().Rand()
 	a := pairing.NewZr().Rand()
 
-	msk := &ABEmsk{
+	msk := ABEmsk{
 		galpha: pairing.NewG1().PowZn(g, alpha),
 	}
 	h := make(map[string]*pbc.Element)
 	for _, att := range atts {
 		h[att] = pairing.NewG1().Rand()
 	}
-	pk := &ABEpk{
+	pk := ABEpk{
 		g:        g,
 		eggalpha: pairing.NewGT().Pair(g, msk.galpha),
 		ga:       pairing.NewG1().PowZn(g, a),
@@ -34,7 +34,7 @@ func Setup(atts []string) (*pbc.Pairing, *ABEpk, *ABEmsk) {
 	return pairing, pk, msk
 }
 
-func Enc(pairing *pbc.Pairing, m *Message, ac AccessStructure, pk *ABEpk) (*Ciphertext, error) {
+func Enc(pairing *pbc.Pairing, m Message, ac AccessStructure, pk ABEpk) (Ciphertext, error) {
 	s := pairing.NewZr().Rand()
 	c1 := pairing.NewGT().Mul(m.mElement, pairing.NewGT().PowZn(pk.eggalpha, s))
 	c2 := pairing.NewG1().PowZn(pk.g, s)
@@ -60,7 +60,7 @@ func Enc(pairing *pbc.Pairing, m *Message, ac AccessStructure, pk *ABEpk) (*Ciph
 		d2[att] = pairing.NewG1().PowZn(pk.g, r[i])
 	}
 
-	c := &Ciphertext{
+	c := Ciphertext{
 		C1:              c1,
 		C2:              c2,
 		D1:              d1,
@@ -71,17 +71,17 @@ func Enc(pairing *pbc.Pairing, m *Message, ac AccessStructure, pk *ABEpk) (*Ciph
 	return c, nil
 }
 
-func KeyGen(pairing *pbc.Pairing, msk *ABEmsk, pk *ABEpk, atts []string) (*PersonalKey, error) {
+func KeyGen(pairing *pbc.Pairing, msk ABEmsk, pk ABEpk, atts []string) (PersonalKey, error) {
 	t := pairing.NewZr().Rand()
 	kx := make(map[string]*pbc.Element)
 	for _, att := range atts {
 		if hx, ok := pk.h[att]; ok {
 			kx[att] = pairing.NewG1().PowZn(hx, t)
 		} else {
-			return nil, fmt.Errorf("attribute %s is not valid", att)
+			return PersonalKey{}, fmt.Errorf("attribute %s is not valid", att)
 		}
 	}
-	psersonalKey := &PersonalKey{
+	psersonalKey := PersonalKey{
 		K:  pairing.NewG1().Mul(msk.galpha, pairing.NewG1().PowZn(pk.ga, t)),
 		L:  pairing.NewG1().PowZn(pk.g, t),
 		Kx: kx,
@@ -89,8 +89,8 @@ func KeyGen(pairing *pbc.Pairing, msk *ABEmsk, pk *ABEpk, atts []string) (*Perso
 	return psersonalKey, nil
 }
 
-func Dec(ct *Ciphertext, personalkey *PersonalKey) (*Message, error) {
-	m := new(Message)
+func Dec(ct Ciphertext, personalkey PersonalKey) (Message, error) {
+	m := Message{}
 	pairing := ct.Pairing
 	ac := ct.AccessStructure
 
