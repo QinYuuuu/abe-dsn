@@ -1,7 +1,6 @@
 package vss
 
 import (
-	"fmt"
 	"math/big"
 	"strconv"
 
@@ -36,7 +35,7 @@ func Share(param Param, s *big.Int) ([]*big.Int, []*pbc.Element) {
 		f[i], _ = RandBigInt(param.r)
 		c[i] = param.pairing.NewG1().PowBig(param.g, f[i])
 	}
-	fmt.Printf("f(x): %v\n", f)
+	//fmt.Printf("f(x): %v\n", f)
 	shares := make([]*big.Int, param.n)
 	for j := 0; j < param.n; j++ {
 		bigj, _ := new(big.Int).SetString(strconv.Itoa(j), 10)

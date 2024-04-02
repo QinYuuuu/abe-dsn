@@ -34,7 +34,7 @@ func Test(attnum, nodenum, t int) {
 	}
 	ac.BuildFromPolicy(result[:len(result)-5])
 
-	fmt.Printf("access structure: \n%+v\n", ac.GetMatrixAsString())
+	//fmt.Printf("access structure: \n%+v\n", ac.GetMatrixAsString())
 
 	pairing, abepk, _ := cpabe.Setup(atts)
 	r, _ := new(big.Int).SetString("730750818665451621361119245571504901405976559617", 10)
@@ -54,6 +54,19 @@ func Test(attnum, nodenum, t int) {
 	end := time.Now()
 	fmt.Printf("time: %v\n", end.Sub(start))
 	byteAmount := 0
-
-	fmt.Printf("communication: %vByte", byteAmount)
+	for i := 0; i < len(shares); i++ {
+		byteAmount += len(shares[i].Bytes())
+	}
+	for i := 0; i < len(comm); i++ {
+		byteAmount += len(comm[i].Bytes())
+	}
+	for i := 0; i < len(chunks); i++ {
+		byteAmount += chunks[i].Size()
+		tmp := merklecomm[i].Hash()
+		for j := 0; j < len(tmp); j++ {
+			byteAmount += len(tmp[j])
+		}
+	}
+	byteAmount += len(root)
+	fmt.Printf("communication: %vByte\n", byteAmount)
 }

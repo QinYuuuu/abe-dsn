@@ -3,6 +3,7 @@ package abedsn
 import (
 	"fmt"
 	"math/big"
+	"sync"
 
 	"github.com/Nik-U/pbc"
 	"github.com/QinYuuuu/abe-dsn/cpabe"
@@ -40,18 +41,25 @@ func GenerateChunk(symcipher []byte, N, F int) ([]es.ErasureCodeChunk, []merkle.
 		return nil, nil, nil
 	}
 	dataList := make([][]byte, N)
+	var wg sync.WaitGroup
+	wg.Add(N)
 	for i := 0; i < N; i++ {
-		dataList[i] = chunks[i].GetData()
+		go func(i int) {
+			dataList[i] = chunks[i].GetData()
+			wg.Done()
+		}(i)
 	}
+	wg.Wait()
 	m, _ := merkle.NewMerkleTree(dataList, hasher.SHA256Hasher)
 	witness := make([]merkle.Witness, N)
+	wg.Add(N)
 	for i := 0; i < N; i++ {
-		witness[i], err = merkle.CreateWitness(m, i)
-		if err != nil {
-			fmt.Printf("create witness wrong: %v\n", err)
-			return nil, nil, nil
-		}
+		go func(i int) {
+			witness[i], _ = merkle.CreateWitness(m, i)
+			wg.Done()
+		}(i)
 	}
+	wg.Wait()
 	merklecomm := merkle.Commit(m)
 	return chunks, witness, merklecomm
 }

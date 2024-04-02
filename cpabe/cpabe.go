@@ -8,7 +8,7 @@ import (
 )
 
 func Setup(atts []string) (*pbc.Pairing, ABEpk, ABEmsk) {
-	paramReader, err := os.Open("a.properties")
+	paramReader, err := os.Open("/home/zhangry2001/abe-dsn/cpabe/a.properties")
 	if err != nil {
 		fmt.Printf("read a.properties wrong: %v\n", err)
 	}
