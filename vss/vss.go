@@ -15,6 +15,10 @@ type Param struct {
 	t       int
 }
 
+func (p Param) GetT() int {
+	return p.t
+}
+
 func Setup(pairing *pbc.Pairing, g *pbc.Element, t, n int, r *big.Int) Param {
 	param := Param{
 		pairing: pairing,

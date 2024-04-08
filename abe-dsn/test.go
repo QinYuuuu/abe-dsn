@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Nik-U/pbc"
@@ -13,15 +14,15 @@ import (
 	"github.com/QinYuuuu/abe-dsn/vss"
 )
 
-type payload struct {
-	c1 *pbc.Element
-	d2 map[string]*pbc.Element
+type Payload struct {
+	C1 *pbc.Element
+	C2 *pbc.Element
 }
 
-func Test(attnum, nodenum, t int) {
+func Test(attnum, nodenum, t int) (time.Duration, int) {
 	if nodenum < 3*t+1 {
 		fmt.Printf("node number: %v, faulty node number: %v \n", nodenum, t)
-		return
+		return 0, 0
 	}
 	atts := make([]string, attnum)
 	for i := 0; i < attnum; i++ {
@@ -43,22 +44,56 @@ func Test(attnum, nodenum, t int) {
 	hasher.Write([]byte("test"))
 	symkey := hasher.Sum(nil)
 
+	lenth := ac.GetL()
+	n := ac.GetN()
 	start := time.Now()
 	s, _ := vss.RandBigInt(r)
-	shares, comm := vss.Share(param, s)
+	v := []*pbc.Element{pairing.NewZr().SetBig(s)}
+	rx := []*pbc.Element{pairing.NewZr().Rand()}
+	lambdax := make([]*pbc.Element, n)
 
-	c1, d2 := GenerateABEciphertext(pairing.NewGT().SetBytes(symkey), pairing, abepk, ac, s)
-	p := payload{c1: c1, d2: d2}
+	for i := 1; i < lenth; i++ {
+		rx = append(rx, pairing.NewZr().Rand())
+		v = append(v, pairing.NewZr().Rand())
+	}
+	for i := 0; i < n; i++ {
+		lambdax[i] = cpabe.DotProduct(ac.A[i], v, pairing)
+	}
+	//
+	shares1 := make([][]*big.Int, lenth)
+	comm1 := make([][]*pbc.Element, lenth)
+	shares2 := make([][]*big.Int, lenth)
+	comm2 := make([][]*pbc.Element, lenth)
+	var wg sync.WaitGroup
+	wg.Add(lenth)
+	for i := 0; i < lenth; i++ {
+		go func(i int) {
+			shares1[i], comm1[i] = vss.Share(param, rx[i].BigInt())
+			shares2[i], comm2[i] = vss.Share(param, v[i].BigInt())
+			wg.Done()
+		}(i)
+	}
+	c1, c2 := GenerateABEciphertext(pairing.NewGT().SetBytes(symkey), pairing, abepk, ac, s)
+	p := Payload{C1: c1, C2: c2}
 	pbytes, _ := json.Marshal(p)
 	chunks, merklecomm, root := GenerateChunk(pbytes, nodenum, t)
+	wg.Wait()
 	end := time.Now()
-	fmt.Printf("time: %v\n", end.Sub(start))
+	//fmt.Printf("time: %v\n", end.Sub(start))
 	byteAmount := 0
-	for i := 0; i < len(shares); i++ {
-		byteAmount += len(shares[i].Bytes())
-	}
-	for i := 0; i < len(comm); i++ {
-		byteAmount += len(comm[i].Bytes())
+	for j := 0; j < lenth; j++ {
+		for i := 0; i < len(shares1[j]); i++ {
+			byteAmount += len(shares1[j][i].Bytes())
+		}
+		for i := 0; i < len(shares2[j]); i++ {
+			byteAmount += len(shares2[j][i].Bytes())
+		}
+		for i := 0; i < len(comm1[j]); i++ {
+			byteAmount += len(comm1[j][i].Bytes())
+		}
+		for i := 0; i < len(comm2[j]); i++ {
+			byteAmount += len(comm2[j][i].Bytes())
+		}
 	}
 	for i := 0; i < len(chunks); i++ {
 		byteAmount += chunks[i].Size()
@@ -68,5 +103,6 @@ func Test(attnum, nodenum, t int) {
 		}
 	}
 	byteAmount += len(root)
-	fmt.Printf("communication: %vByte\n", byteAmount)
+	return end.Sub(start), byteAmount
+	//fmt.Printf("communication: %vByte\n", byteAmount)
 }
