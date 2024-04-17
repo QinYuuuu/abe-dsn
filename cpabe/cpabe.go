@@ -132,13 +132,13 @@ func Dec(ct Ciphertext, personalkey PersonalKey) (Message, error) {
 			}
 		}
 	}
-	fmt.Printf("subA_T: %v\n", subA_T)
+	//fmt.Printf("subA_T: %v\n", subA_T)
 	b := []*pbc.Element{pairing.NewZr().Set1()}
 	for i := 1; i < len(toUse); i++ {
 		b = append(b, pairing.NewZr().Set0())
 	}
 	cx := GaussianElimination(subA_T, b, pairing)
-	fmt.Printf("cx: %v\n", cx)
+	//fmt.Printf("cx: %v\n", cx)
 	tmp := pairing.NewGT().Set1()
 	for i, index := range toUse {
 		att := ac.rho[index]
@@ -147,7 +147,7 @@ func Dec(ct Ciphertext, personalkey PersonalKey) (Message, error) {
 		tmp.Mul(tmp, pairing.NewGT().PowZn(pairing.NewGT().Mul(tmp1, tmp2), cx[i]))
 	}
 	tmp = pairing.NewGT().Div(pairing.NewGT().Pair(ct.C2, personalkey.K), tmp)
-	fmt.Printf("eggalphas: %v\n", tmp)
+	//fmt.Printf("eggalphas: %v\n", tmp)
 	m.mElement = pairing.NewGT().Div(ct.C1, tmp)
 
 	return m, nil

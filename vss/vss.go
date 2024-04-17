@@ -42,7 +42,7 @@ func Share(param Param, s *big.Int) ([]*big.Int, []*pbc.Element) {
 	//fmt.Printf("f(x): %v\n", f)
 	shares := make([]*big.Int, param.n)
 	for j := 0; j < param.n; j++ {
-		bigj, _ := new(big.Int).SetString(strconv.Itoa(j), 10)
+		bigj, _ := new(big.Int).SetString(strconv.Itoa(j+1), 10)
 		shares[j] = polynomialEval(f, bigj, param.r)
 	}
 
@@ -54,7 +54,7 @@ func Verify(param Param, c []*pbc.Element, share *big.Int, index int) bool {
 	right := c[0]
 	power := 1
 	for j := 1; j < param.t+1; j++ {
-		power := index * power
+		power := (index + 1) * power
 		tmp := param.pairing.NewG1().PowBig(c[j], big.NewInt(int64(power)))
 		right = param.pairing.NewG1().Mul(right, tmp)
 	}

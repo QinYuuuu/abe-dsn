@@ -274,7 +274,7 @@ func LagrangeInterpolation(x, y []*big.Int, R *big.Int) ([]*big.Int, error) {
 
 // TODO add method to 'clean' the polynomial, to remove right-zeroes
 
-func generate0LagrangeCoefficient(x []*big.Int, index int, R *big.Int) *big.Int {
+func Generate0LagrangeCoefficient(x []*big.Int, index int, R *big.Int) *big.Int {
 	result := big.NewInt(1)
 	for j, bigx := range x {
 		if j == index {

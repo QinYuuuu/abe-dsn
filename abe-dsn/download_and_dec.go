@@ -46,18 +46,19 @@ func VerifyCPABEShare(index, t int, pairing *pbc.Pairing, pk cpabe.ABEpk, d1 map
 }
 
 func Aggregate(pairing *pbc.Pairing, r *big.Int, d1s map[int]*pbc.Element, d2s map[int]*pbc.Element, nodelist []int) (*pbc.Element, *pbc.Element) {
+	//fmt.Printf("d1s %v\n", d1s)
 	indexlist := make([]int, len(nodelist))
 	for i := range nodelist {
 		indexlist[i] = nodelist[i] + 1
 	}
+	//fmt.Printf("indexlist %v\n", indexlist)
 	d1 := pairing.NewG1().Set1()
 	d2 := pairing.NewG1().Set1()
 	for _, j := range indexlist {
-		lagrange := pairing.NewZr()
-		lagrange.SetBig(cpabe.GenerateLagrangeCoefficient(indexlist, j, r))
-
-		d1 = pairing.NewG1().Mul(d1, pairing.NewG1().PowZn(d1s[j-1], lagrange))
-		d2 = pairing.NewG1().Mul(d2, pairing.NewG1().PowZn(d2s[j-1], lagrange))
+		tmp := cpabe.GenerateLagrangeCoefficient(indexlist, j, r)
+		//fmt.Printf("la %v\n", tmp)
+		d1 = pairing.NewG1().Mul(d1, pairing.NewG1().PowBig(d1s[j-1], tmp))
+		d2 = pairing.NewG1().Mul(d2, pairing.NewG1().PowBig(d2s[j-1], tmp))
 	}
 	return d1, d2
 }

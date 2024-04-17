@@ -37,7 +37,7 @@ func Test(attnum, nodenum, t int) (time.Duration, int) {
 
 	//fmt.Printf("access structure: \n%+v\n", ac.GetMatrixAsString())
 
-	pairing, abepk, _ := cpabe.Setup(atts)
+	pairing, abepk, abemsk := cpabe.Setup(atts)
 	r, _ := new(big.Int).SetString("730750818665451621361119245571504901405976559617", 10)
 	param := vss.Setup(pairing, abepk.GetGenerateG(), t, nodenum, r)
 	hasher := sha256.New()
@@ -46,9 +46,12 @@ func Test(attnum, nodenum, t int) (time.Duration, int) {
 
 	lenth := ac.GetL()
 	n := ac.GetN()
-	start := time.Now()
+	//start := time.Now()
 	s, _ := vss.RandBigInt(r)
 	v := []*pbc.Element{pairing.NewZr().SetBig(s)}
+
+	//fmt.Printf("eggalphas %v\n", pairing.NewGT().PowBig(abepk.Geteggalpha(), s))
+
 	rx := []*pbc.Element{pairing.NewZr().Rand()}
 	lambdax := make([]*pbc.Element, n)
 
@@ -68,18 +71,75 @@ func Test(attnum, nodenum, t int) (time.Duration, int) {
 	wg.Add(lenth)
 	for i := 0; i < lenth; i++ {
 		go func(i int) {
-			shares1[i], comm1[i] = vss.Share(param, rx[i].BigInt())
-			shares2[i], comm2[i] = vss.Share(param, v[i].BigInt())
+			shares2[i], comm2[i] = vss.Share(param, rx[i].BigInt())
+			shares1[i], comm1[i] = vss.Share(param, lambdax[i].BigInt())
 			wg.Done()
 		}(i)
 	}
+
 	c1, c2 := GenerateABEciphertext(pairing.NewGT().SetBytes(symkey), pairing, abepk, ac, s)
 	p := Payload{C1: c1, C2: c2}
 	pbytes, _ := json.Marshal(p)
 	chunks, merklecomm, root := GenerateChunk(pbytes, nodenum, t)
 	wg.Wait()
-	end := time.Now()
+	//end := time.Now()
 	//fmt.Printf("time: %v\n", end.Sub(start))
+	/*
+		for i := 0; i < lenth; i++ {
+			fmt.Printf("vi %v\n", v[i])
+			fmt.Printf("shares1 : %v\n", shares1[i])
+		}*/
+	rho := ac.GetRho()
+	ga := abepk.Getga()
+	g := abepk.GetGenerateG()
+	h := abepk.Geth()
+	/*
+		d10x := make(map[string]*pbc.Element)
+		d20x := make(map[string]*pbc.Element)
+		for x := 0; x < lenth; x++ {
+			att := rho[x]
+			tmp1 := pairing.NewG1().PowZn(ga, lambdax[x])
+			tmp2 := pairing.NewG1().PowZn(h[att], pairing.NewZr().Neg(rx[x]))
+			d10x[att] = pairing.NewG1().Mul(tmp1, tmp2)
+			d20x[att] = pairing.NewG1().PowZn(g, rx[x])
+		}
+	*/
+	nodelist := make([]int, nodenum)
+	d1xi := make(map[string]map[int]*pbc.Element)
+	d2xi := make(map[string]map[int]*pbc.Element)
+	for i := 0; i < nodenum; i++ {
+		nodelist[i] = i
+	}
+
+	for x := 0; x < lenth; x++ {
+		att := rho[x]
+		d1xi[att] = make(map[int]*pbc.Element)
+		d2xi[att] = make(map[int]*pbc.Element)
+		for i := 0; i < nodenum; i++ {
+			tmp1 := pairing.NewG1().PowBig(ga, shares1[x][i])
+			tmp2 := pairing.NewG1().PowZn(h[att], pairing.NewZr().Neg(pairing.NewZr().SetBig(shares2[x][i])))
+			d1xi[att][i] = pairing.NewG1().Mul(tmp1, tmp2)
+			d2xi[att][i] = pairing.NewG1().PowBig(g, shares2[x][i])
+		}
+	}
+
+	start := time.Now()
+	d1x := make(map[string]*pbc.Element)
+	d2x := make(map[string]*pbc.Element)
+
+	for x := 0; x < lenth; x++ {
+		att := rho[x]
+		d1x[att], d2x[att] = Aggregate(pairing, r, d1xi[att], d2xi[att], nodelist)
+		//fmt.Printf("d1x ? %v\n", d10x[att].Equals(d1x[att]))
+		//fmt.Printf("d2x ? %v\n", d20x[att].Equals(d2x[att]))
+	}
+
+	ct := cpabe.Ciphertext{C1: c1, C2: c2, D1: d1x, D2: d2x, AccessStructure: ac, Pairing: pairing}
+	psk, _ := cpabe.KeyGen(pairing, abemsk, abepk, atts)
+	cpabe.Dec(ct, psk)
+	end := time.Now()
+	//fmt.Printf("plaintext: %v\n", pairing.NewGT().SetBytes(symkey))
+	//fmt.Printf("decrypt: %v\n", m.GetElement())
 	byteAmount := 0
 	for j := 0; j < lenth; j++ {
 		for i := 0; i < len(shares1[j]); i++ {
