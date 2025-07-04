@@ -1,7 +1,5 @@
 github.com/Nik-U/pbc v0.0.0-20181205041846-3e516ca0c5d6 h1:GU/vL5sj0IgGYEOIIAJ1HDI9dgqT0gJXkhXINri7Otc=
 github.com/Nik-U/pbc v0.0.0-20181205041846-3e516ca0c5d6/go.mod h1:Zt2U1SemYWNGXqS1fDiZC7u74nsJTAnWK5WVgvI8OAs=
-github.com/QinYuuuu/avid-d v0.0.0-20240324090950-424b7dabe16c h1:0bwoeai/SUzLYKWddRxr0qCr0FDDCXMIVPyI2PzIOFk=
-github.com/QinYuuuu/avid-d v0.0.0-20240324090950-424b7dabe16c/go.mod h1:+AOl2uG9ajBbTLvV1K5hCbKPj6cKPfuWPB8FPdPjMio=
 github.com/QinYuuuu/avid-d v0.0.0-20240401115245-9184c7778425 h1:gNT+jEfUcjPeu3iy2AjSmkSVVd5mTZKOFq6UV0mcn8w=
 github.com/QinYuuuu/avid-d v0.0.0-20240401115245-9184c7778425/go.mod h1:+AOl2uG9ajBbTLvV1K5hCbKPj6cKPfuWPB8FPdPjMio=
 github.com/klauspost/cpuid/v2 v2.2.7 h1:ZWSB3igEs+d0qvnxR/ZBzXVmxkgt8DdzP6m9pfuVLDM=
