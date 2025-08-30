@@ -2,13 +2,19 @@ package cpabe
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/Nik-U/pbc"
 )
 
 func Setup(atts []string) (*pbc.Pairing, ABEpk, ABEmsk) {
-	paramReader, err := os.Open("/home/zhangry2001/abe-dsn/cpabe/a.properties")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		slog.Error("get home dir wrong", slog.String("error", err.Error()))
+		panic(err)
+	}
+	paramReader, err := os.Open(home + "/abe-dsn/cpabe/a.properties")
 	if err != nil {
 		fmt.Printf("read a.properties wrong: %v\n", err)
 	}
